@@ -2490,6 +2490,14 @@ TEST_CASE("Erf: functions", "[functions]")
     r1 = erf(zero);
     REQUIRE(eq(*r1, *zero));
 
+    r1 = erf(real_double(1.0));
+    REQUIRE(is_a<RealDouble>(*r1));
+    REQUIRE(std::abs(down_cast<const RealDouble &>(*r1).i - 0.84270079294971)
+            < 1e-12);
+
+    CHECK_THROWS_AS(erf(complex_double(std::complex<double>(1, 1))),
+                    NotImplementedError);
+
     r1 = erf(mul(i2, x));
     r2 = exp(mul(integer(-4), (mul(x, x))));
     r2 = div(mul(integer(4), r2), sqrt(pi));
@@ -2518,6 +2526,14 @@ TEST_CASE("Erfc: functions", "[functions]")
 
     r1 = erfc(zero);
     REQUIRE(eq(*r1, *one));
+
+    r1 = erfc(real_double(1.0));
+    REQUIRE(is_a<RealDouble>(*r1));
+    REQUIRE(std::abs(down_cast<const RealDouble &>(*r1).i - 0.15729920705028)
+            < 1e-12);
+
+    CHECK_THROWS_AS(erfc(complex_double(std::complex<double>(1, 1))),
+                    NotImplementedError);
 
     r1 = erfc(mul(i3, x));
     r2 = exp(mul(integer(-9), (mul(x, x))));
@@ -2969,6 +2985,28 @@ TEST_CASE("MPFR and MPC: functions", "[functions]")
     r1 = asin(real_mpfr(a));
     REQUIRE(is_a<RealMPFR>(*r1));
 
+    mpfr_set_ui(a.get_mpfr_t(), 2, MPFR_RNDN);
+    r1 = erf(real_mpfr(a));
+
+    mpfr_set_ui(a.get_mpfr_t(), 2, MPFR_RNDN);
+    r2 = erfc(real_mpfr(a));
+    REQUIRE(is_a<RealMPFR>(*r1));
+    REQUIRE(is_a<RealMPFR>(*r2));
+
+    mpfr_mul_z(a.get_mpfr_t(), down_cast<const RealMPFR &>(*r1).i.get_mpfr_t(),
+               get_mpz_t(p), MPFR_RNDN);
+    q = 99532226501895273_z;
+    REQUIRE(mpfr_cmp_z(a.get_mpfr_t(), get_mpz_t(q)) > 0);
+    q = 99532226501895274_z;
+    REQUIRE(mpfr_cmp_z(a.get_mpfr_t(), get_mpz_t(q)) < 0);
+
+    mpfr_mul_z(a.get_mpfr_t(), down_cast<const RealMPFR &>(*r2).i.get_mpfr_t(),
+               get_mpz_t(p), MPFR_RNDN);
+    q = 467773498104726_z;
+    REQUIRE(mpfr_cmp_z(a.get_mpfr_t(), get_mpz_t(q)) > 0);
+    q = 467773498104727_z;
+    REQUIRE(mpfr_cmp_z(a.get_mpfr_t(), get_mpz_t(q)) < 0);
+
 #ifdef HAVE_SYMENGINE_MPC
     // Check asin(2.0)
     mpfr_set_si(a.get_mpfr_t(), 2, MPFR_RNDN);
@@ -3007,6 +3045,10 @@ TEST_CASE("MPFR and MPC: functions", "[functions]")
     q = 106127506190503566_z;
     REQUIRE(mpfr_cmp_z(a.get_mpfr_t(), get_mpz_t(q)) < 0);
 
+    mpc_set_si_si(c.get_mpc_t(), 1, 1, MPFR_RNDN);
+    CHECK_THROWS_AS(erf(complex_mpc(c)), NotImplementedError);
+    CHECK_THROWS_AS(erfc(complex_mpc(c)), NotImplementedError);
+
     // Check asech(2)
     mpfr_set_si(a.get_mpfr_t(), 2, MPFR_RNDN);
     r1 = asech(real_mpfr(a));
@@ -3014,7 +3056,7 @@ TEST_CASE("MPFR and MPC: functions", "[functions]")
     b = down_cast<const ComplexMPC &>(*r1).as_mpc().get_mpc_t();
     mpc_real(a.get_mpfr_t(), b, MPFR_RNDN);
     mpfr_mul_z(a.get_mpfr_t(), a.get_mpfr_t(), get_mpz_t(p), MPFR_RNDN);
-    q = 0.000000000000000_z;
+    q = 0_z;
     REQUIRE(mpfr_cmp_z(a.get_mpfr_t(), get_mpz_t(q)) == 0);
 
     mpc_imag(a.get_mpfr_t(), b, MPFR_RNDN);

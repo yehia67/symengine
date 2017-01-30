@@ -22,6 +22,7 @@ using SymEngine::sin;
 using SymEngine::cos;
 using SymEngine::eval_mpc;
 using SymEngine::print_stack_on_segfault;
+using SymEngine::NotImplementedError;
 using SymEngine::asech;
 using SymEngine::real_double;
 
@@ -75,6 +76,12 @@ TEST_CASE("eval: eval_mpc", "[eval_mpc]")
     mpc_set_fr_fr(b, real, imag, MPFR_RNDN);
 
     REQUIRE(mpc_cmp(a, b) == 0);
+
+    r = erf(add(one, mul(integer(2), I)));
+    CHECK_THROWS_AS(eval_mpc(a, *r, MPFR_RNDN), NotImplementedError);
+
+    r = erfc(add(one, mul(integer(2), I)));
+    CHECK_THROWS_AS(eval_mpc(a, *r, MPFR_RNDN), NotImplementedError);
 
     mpfr_clear(real);
     mpfr_clear(imag);
